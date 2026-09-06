@@ -9,8 +9,8 @@ Build a **functional demo** of Flick Mart: a native Android/iOS marketplace for 
 - Google, Apple, and passwordless-email-code authentication through Clerk.
 - Signed-in browse experience; every account can buy and sell.
 - Seller profile: display name and profile photo required before publishing.
-- Ten launch categories: Electronics; Phones & Tablets; Fashion; Home & Furniture; Beauty; Vehicles; Property; Jobs & Services; Sports & Leisure; Other.
-- A shared listing form: 1–6 photos, title, category, price type/value, free-text condition, description, public latitude/longitude map pin, contact method(s), and compliance confirmation.
+- Listing categories are stored as validated text, rather than in a separate table: Apartment, Self-Contained, Semi self-contained, Single room, Shop/Store, Land, Electronics, Item, or Others.
+- A shared listing form: one image, title, category, price, description, address, city, public latitude/longitude map pin, phone and WhatsApp contacts, and compliance confirmation.
 - Listing creation limit of five per seller per day and five active listings per seller.
 - Listing states: active, paused, sold, expired, deleted. Active listings expire after 30 days; the seller sees an in-app renewal banner.
 - Browse/search by keyword, category, price range, neighborhood/distance, newest-first; favorites.
@@ -51,13 +51,11 @@ Neon is the source of truth. Clerk is the identity provider; store only `clerk_u
 
 | Entity | Essential fields and constraints |
 | --- | --- |
-| `profiles` | `id`, unique `clerk_user_id`, display name, profile-image URL, timestamps, deletion timestamp/status. Profile must be complete before publishing. |
-| `categories` | Seeded, stable category slug/name/order for the ten launch categories. |
-| `listings` | Owner profile, category, title, description, amount in kobo or null, `price_type` (`fixed`, `negotiable`, `contact`), free-text condition, public `latitude`/`longitude`, Enugu locality label, contact booleans and normalized contact number, lifecycle status, created/updated/expiry timestamps. Only `active` listings appear in discovery. |
-| `listing_images` | Listing FK, ImageKit file ID/URL, width/height, sort order. Enforce 1–6 on publish. |
+| `profiles` | `id`, unique `clerk_user_id`, display name, profile-image URL, timestamps. Profile must be complete before publishing. |
+| `listings` | Owner profile, validated text category, title, required ImageKit `image_url`, description, required numeric price, address, city, public `latitude`/`longitude`, required phone and WhatsApp contacts, lifecycle status, created/updated/expiry timestamps. Active and sold listings appear in discovery; sold listings show a badge. |
 | `favorites` | Unique pair of profile and listing; cascade delete with profile/listing. |
 | `reports` | Reporter, listing, reason category, optional detail, timestamps, review status. Reports remain operationally visible only while the underlying data exists. |
-| `analytics_events` | Event name, anonymous/session or actor reference as permitted, listing/category context, timestamp; never store WhatsApp/call contents. |
+| `analytics_events` | Event name, anonymous/session or actor reference as permitted, listing/category-text context, timestamp; never store WhatsApp/call contents. |
 | `listing_creation_events` or queryable timestamps | Supports five-created-per-day enforcement. |
 
 ### Validation and authorization
@@ -65,7 +63,7 @@ Neon is the source of truth. Clerk is the identity provider; store only `clerk_u
 - API routes derive the actor from a verified Clerk session; never trust a profile ID supplied by the app.
 - Only a listing owner can alter, pause, sell, delete, or renew it.
 - Reject creates after five in the current rolling/calendar day and publishes after five active listings.
-- Validate image ownership, image count, field lengths, enum values, Nigerian phone format, finite coordinates, and price rules server-side.
+- Validate image ownership, field lengths, category values, Nigerian phone formats, finite coordinates, and a positive price server-side.
 - Account deletion runs server-side: delete ImageKit assets first/with a recoverable job strategy, then cascade-delete Neon records and revoke/deactivate the Clerk account according to the Clerk-supported flow. Handle partial failure idempotently.
 
 ## 5. App and API shape
@@ -113,13 +111,13 @@ Use `.env.example` with variable names only. Commit neither secrets nor real URL
 2. Create the environment-variable contract and organization-owned service projects.
 3. Change Expo configuration for server output/API deployment and establish the server origin strategy.
 4. Complete the map decision gate on physical Android/iOS development builds.
-5. Add Drizzle configuration, initial migration, seeded categories, and a Neon connection test through an API route.
+5. Add Drizzle configuration, initial migration, category validation, and a Neon connection test through an API route.
 6. Add Clerk provider, protected route structure, and sign-in flow for the three chosen methods.
 
 ### Days 3–5 — seller foundation
 
 1. Build profile completion/editing and server-side profile authorization.
-2. Implement ImageKit signed upload flow with upload progress, deletion of abandoned local selection where practical, and 1–6 ordering.
+2. Implement ImageKit signed upload flow with upload progress and deletion of an abandoned local selection where practical.
 3. Build the shared listing form, manual map pin selection, field validation, create endpoint, and enforced daily/active limits.
 4. Implement listing draft/preview behavior only if it fits; otherwise keep the form in memory and publish directly.
 
@@ -153,7 +151,7 @@ Use `.env.example` with variable names only. Commit neither secrets nor real URL
 ## 8. Acceptance checklist
 
 - A new user can complete Google, Apple, or email-code sign-in and cannot browse application screens unauthenticated.
-- A completed profile can create a listing with one to six valid images and a public map pin.
+- A completed profile can create a listing with one valid image and a public map pin.
 - The API rejects a sixth daily create and a sixth active listing.
 - A buyer can find an active listing with search/filtering, save it, open its seller, call, and launch WhatsApp with the listing title prefilled.
 - Seller lifecycle actions change what buyers can discover; expired listings do not appear as active.

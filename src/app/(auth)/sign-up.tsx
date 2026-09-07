@@ -1,7 +1,12 @@
+import useSocialAuth from "@/hooks/useSocialAuth";
+import { OAUTH } from "@/utils/constants";
+import { useAuth, useSignUp } from "@clerk/expo";
 import Entypo from "@expo/vector-icons/Entypo";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  Button,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -70,7 +75,82 @@ const AppleIcon = () => (
 
 export default function SignUp() {
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
+  const { signUp, errors, fetchStatus } = useSignUp();
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { handleSocialAuth, loadingStrategy } = useSocialAuth();
+
+  const isGoogleClicked = loadingStrategy === OAUTH.GOOGLE_OAUTH;
+  const isAppleClicked = loadingStrategy === OAUTH.APPLE_OAUTH;
+  // const isLoading = isGoogleClicked || isAppleClicked
+
+  const [code, setCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleSignUp = async () => {
+    const { error } = await signUp.password({
+      emailAddress,
+      password,
+      firstName,
+    });
+    if (error) {
+      // Handle the error in your app.
+      // See https://clerk.com/docs/guides/development/custom-flows/error-handling
+      console.error(JSON.stringify(error, null, 2));
+
+      return;
+    }
+
+    const { error: sendError } = await signUp.verifications.sendEmailCode();
+    if (sendError) {
+      // Handle the error in your app.
+      return;
+    }
+
+    setIsVerifying(true);
+  };
+
+  const handleVerify = async () => {
+    const { error } = await signUp.verifications.verifyEmailCode({ code });
+    if (error) {
+      // Handle the error in your app.
+      return;
+    }
+
+    const { error: finalizeError } = await signUp.finalize();
+    if (finalizeError) {
+      // Handle the error in your app.
+    }
+  };
+
+  const isLoading = fetchStatus === "fetching";
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (isSignedIn) {
+    return <Redirect href="/(tabs)" />;
+  }
+
+  if (isVerifying) {
+    return (
+      <View className="flex-1 justify-center items-center px-6">
+        <TextInput
+          className=" border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 text-sm bg-gray-50 mb-5"
+          value={code}
+          placeholder="Enter your verification code"
+          onChangeText={setCode}
+          keyboardType="numeric"
+        />
+        <Button title="Verify" onPress={handleVerify} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -107,15 +187,15 @@ export default function SignUp() {
                 className="flex-1 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 text-sm bg-gray-50 mb-5"
                 placeholder="First name"
                 placeholderTextColor="#9CA3AF"
-                // value={firstName}
-                // onChangeText={setFirstName}
+                value={firstName}
+                onChangeText={setFirstName}
                 autoCapitalize="words"
               />
-              {/* {errors.fields.firstName && (
+              {errors.fields.firstName && (
                 <Text className="text-red-500 mb-4">
                   {errors.fields.firstName.message}
                 </Text>
-              )} */}
+              )}
 
               <Text className="text-gray-700 text-sm font-medium mb-1.5">
                 Email
@@ -124,16 +204,16 @@ export default function SignUp() {
                 className="border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 text-sm bg-gray-50 mb-5"
                 placeholder="you@example.com"
                 placeholderTextColor="#c0c0c0"
-                // value={email}
-                // onChangeText={setEmail}
+                value={emailAddress}
+                onChangeText={setEmailAddress}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
-              {/* {errors.fields.emailAddress && (
-              <Text className="text-red-500 mb-4">
-                {errors.fields.emailAddress.message}
-              </Text>
-            )} */}
+              {errors.fields.emailAddress && (
+                <Text className="text-red-500 mb-4">
+                  {errors.fields.emailAddress.message}
+                </Text>
+              )}
 
               <Text className="text-gray-700 text-sm font-medium mb-1.5">
                 Password
@@ -142,8 +222,8 @@ export default function SignUp() {
                 <TextInput
                   placeholder="••••••••"
                   placeholderTextColor="#c0c0c0"
-                  // value={password}
-                  // onChangeText={setPassword}
+                  value={password}
+                  onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   className="flex-1 py-3.5 text-gray-900 text-sm"
                 />
@@ -160,12 +240,18 @@ export default function SignUp() {
             </View>
 
             <Pressable
-              // onPress={onSignUpPress}
-              // disabled={isLoading}
+              onPress={handleSignUp}
+              disabled={isLoading}
 
               className="bg-gray-900 rounded-2xl py-4 items-center mb-6"
             >
-              <Text className="text-white text-base font-semibold">SignUp</Text>
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white text-base font-semibold">
+                  SignUp
+                </Text>
+              )}
             </Pressable>
 
             <View className="flex-row items-center mb-6">
@@ -177,16 +263,31 @@ export default function SignUp() {
             </View>
 
             <View className="gap-4">
-              <Pressable className="flex-1 flex-row items-center justify-center border border-gray-200 rounded-2xl py-3.5 gap-2">
-                {/* <GoogleIcon /> */}
+              <Pressable
+                className={`flex-1 flex-row items-center justify-center border border-gray-200 rounded-2xl py-3.5 gap-2 ${loading ? "opacity-70" : ""}`}
+                disabled={loading}
+                onPress={() => handleSocialAuth("oauth_google")}
+              >
+                <GoogleIcon />
                 <Text className="text-gray-700 text-sm font-medium">
-                  Google
+                  {isGoogleClicked
+                    ? "Connecting Google..."
+                    : "Continue with Google"}
                 </Text>
               </Pressable>
 
-              <Pressable className="flex-1 flex-row items-center justify-center border border-gray-200 rounded-2xl py-3.5 gap-2">
-                {/* <AppleIcon /> */}
-                <Text className="text-gray-700 text-sm font-medium">Apple</Text>
+              <Pressable
+                className={`flex-1 flex-row items-center justify-center border border-gray-200 rounded-2xl py-3.5 gap-2 ${loading ? "opacity-70" : ""}`}
+                disabled={loading}
+
+                onPress={() => handleSocialAuth("oauth_apple")}
+              >
+                <AppleIcon />
+                <Text className="text-gray-700 text-sm font-medium">
+                  {isAppleClicked
+                    ? "Connecting Apple..."
+                    : "Continue with Apple"}
+                </Text>
               </Pressable>
             </View>
 
@@ -198,6 +299,11 @@ export default function SignUp() {
                 <Text className="text-gray-900 text-sm font-bold">Sign in</Text>
               </Pressable>
             </View>
+
+            <Text className="mt-3 text-center text-sm leading-5 text-gray-500">
+              By continuing, you agree to our Terms of Service and Privacy
+              Policy.
+            </Text>
 
             <View nativeID="clerk-captcha" />
           </View>

@@ -1,8 +1,10 @@
 import { useAuth, useSignUp } from "@clerk/expo";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Button, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function MainScreen() {
+  const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
   const { signUp } = useSignUp();
 
@@ -88,6 +90,7 @@ export default function MainScreen() {
       <Button title="Sign up" onPress={handleSignUp} />
       {/* Required for sign-up flows on Expo web. Clerk skips the browser CAPTCHA on iOS and Android */}
       <View nativeID="clerk-captcha" />
+      <Text onPress={() => router.push("/(auth)/sign-up")}>Sign Up</Text>
     </View>
   );
 }

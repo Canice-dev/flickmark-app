@@ -1,7 +1,8 @@
 import useSocialAuth from "@/hooks/useSocialAuth";
 import { OAUTH } from "@/utils/constants";
 import { useAuth, useSignUp } from "@clerk/expo";
-import Entypo from "@expo/vector-icons/Entypo";
+import { Ionicons } from "@expo/vector-icons";
+import { Asset } from "expo-asset";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -17,7 +18,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle, Line, Path } from "react-native-svg";
+// import  {  } from "react-native-svg";
+import Svg, { Circle, Line, Path, SvgUri } from "react-native-svg";
+
+const googleLogo = Asset.fromModule(
+  require("../../../assets/images/google-g.svg"),
+).uri;
 
 const EyeIcon = ({ open }: { open: boolean }) =>
   open ? (
@@ -153,7 +159,7 @@ export default function SignUp() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-gray-50 px-6">
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <KeyboardAvoidingView
         behavior={Platform.select({ ios: "padding", default: undefined })}
@@ -166,26 +172,28 @@ export default function SignUp() {
         >
           <Pressable
             onPress={() => router.push("/")}
-            className="px-6 pt-2 pb-5"
+            className="w-14 h-14 items-center justify-center bg-white rounded-full border border-gray-100"
+            // style={{ elevation: 1 }}
           >
-            <Entypo name="chevron-left" size={24} color="black" />
+            <Ionicons name="chevron-back" size={24} color="#0d0d0d" />
           </Pressable>
 
-          <View className="px-6 pt-2 pb-10">
-            <Text className="text-3xl font-bold text-gray-900 mb-1">
-              Create Account
+          <View className="items-center justify-center">
+            <Text className="text-3xl font-bold text-gray-900 mb-1 ">
+              Create an account
             </Text>
-            <Text className="text-gray-400 text-sm mb-8">
-              Join thousands of students
+            <Text className="text-gray-400 text-base mb-8 ">
+              Join thousands of students and start learning today!
             </Text>
-
+          </View>
+          <View className=" pt-2 pb-10">
             <View className="mt-5">
-              <Text className="text-gray-700 text-sm font-medium mb-1.5">
+              <Text className="text-gray-700 text-base font-medium mb-1.5">
                 Name
               </Text>
               <TextInput
-                className="flex-1 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 text-sm bg-gray-50 mb-5"
-                placeholder="First name"
+                className="flex-1 border border-gray-200 rounded-xl px-3 py-4 text-base text-gray-900 mb-5"
+                placeholder="Name"
                 placeholderTextColor="#9CA3AF"
                 value={firstName}
                 onChangeText={setFirstName}
@@ -197,13 +205,13 @@ export default function SignUp() {
                 </Text>
               )}
 
-              <Text className="text-gray-700 text-sm font-medium mb-1.5">
+              <Text className="text-gray-700 text-base font-medium mb-1.5">
                 Email
               </Text>
               <TextInput
-                className="border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 text-sm bg-gray-50 mb-5"
-                placeholder="you@example.com"
-                placeholderTextColor="#c0c0c0"
+                className="border border-gray-200 rounded-xl px-3 py-4 text-base text-gray-900 mb-5"
+                placeholder="Email"
+                placeholderTextColor="#9CA3AF"
                 value={emailAddress}
                 onChangeText={setEmailAddress}
                 keyboardType="email-address"
@@ -215,17 +223,17 @@ export default function SignUp() {
                 </Text>
               )}
 
-              <Text className="text-gray-700 text-sm font-medium mb-1.5">
+              <Text className="text-gray-700 text-base font-medium mb-1.5">
                 Password
               </Text>
-              <View className="border border-gray-200 rounded-xl px-4 bg-gray-50 flex-row items-center mb-1.5">
+              <View className="border border-gray-200 rounded-xl px-3 py-1 bg-gray-50 flex-row items-center mb-1.5">
                 <TextInput
                   placeholder="••••••••"
-                  placeholderTextColor="#c0c0c0"
+                  placeholderTextColor="#9CA3AF"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
-                  className="flex-1 py-3.5 text-gray-900 text-sm"
+                  className="flex-1 py-3.5 text-gray-900 text-base"
                 />
                 <Pressable
                   onPress={() => setShowPassword((v) => !v)}
@@ -234,7 +242,7 @@ export default function SignUp() {
                   <EyeIcon open={showPassword} />
                 </Pressable>
               </View>
-              <Text className="text-gray-400 text-xs mb-7">
+              <Text className="text-gray-400 text-sm mb-7 ">
                 At least 8 characters
               </Text>
             </View>
@@ -243,13 +251,13 @@ export default function SignUp() {
               onPress={handleSignUp}
               disabled={isLoading}
 
-              className="bg-gray-900 rounded-2xl py-4 items-center mb-6"
+              className="min-h-[60px] flex-row items-center justify-center rounded-full bg-[#182a3b] mb-6"
             >
               {isLoading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className="text-white text-base font-semibold">
-                  SignUp
+                <Text className="text-lg font-semibold text-white">
+                  Create account
                 </Text>
               )}
             </Pressable>
@@ -264,12 +272,12 @@ export default function SignUp() {
 
             <View className="gap-4">
               <Pressable
-                className={`flex-1 flex-row items-center justify-center border border-gray-200 rounded-2xl py-3.5 gap-2 ${loading ? "opacity-70" : ""}`}
+                className={`min-h-[60px] flex-row items-center justify-center gap-3 rounded-full border border-gray-200 bg-white ${loading ? "opacity-70" : ""}`}
                 disabled={loading}
                 onPress={() => handleSocialAuth("oauth_google")}
               >
-                <GoogleIcon />
-                <Text className="text-gray-700 text-sm font-medium">
+                <SvgUri uri={googleLogo} width={22} height={22} />
+                <Text className="text-lg font-semibold text-[#101114]">
                   {isGoogleClicked
                     ? "Connecting Google..."
                     : "Continue with Google"}
@@ -277,13 +285,13 @@ export default function SignUp() {
               </Pressable>
 
               <Pressable
-                className={`flex-1 flex-row items-center justify-center border border-gray-200 rounded-2xl py-3.5 gap-2 ${loading ? "opacity-70" : ""}`}
+                className={`min-h-[60px] flex-row items-center justify-center gap-3 rounded-full border border-gray-200 bg-white ${loading ? "opacity-70" : ""}`}
                 disabled={loading}
 
                 onPress={() => handleSocialAuth("oauth_apple")}
               >
-                <AppleIcon />
-                <Text className="text-gray-700 text-sm font-medium">
+                <Ionicons name="logo-apple" size={24} color="#101114" />
+                <Text className="text-lg font-semibold text-[#101114]">
                   {isAppleClicked
                     ? "Connecting Apple..."
                     : "Continue with Apple"}
@@ -292,17 +300,20 @@ export default function SignUp() {
             </View>
 
             <View className="flex-row justify-center items-center mt-7">
-              <Text className="text-gray-400 text-sm">
-                Already have an account?{" "}
+              <Text className="mx-3.5 mt-6 text-center text-sm leading-[18px]">
+                Already have an account?
               </Text>
               <Pressable onPress={() => router.push("/(auth)/sign-in")}>
-                <Text className="text-gray-900 text-sm font-bold">Sign in</Text>
+                <Text className="mt-6 text-center text-sm leading-[18px] font-bold">
+                  Sign in
+                </Text>
               </Pressable>
             </View>
 
-            <Text className="mt-3 text-center text-sm leading-5 text-gray-500">
-              By continuing, you agree to our Terms of Service and Privacy
-              Policy.
+            <Text className="mx-3.5 mt-6 text-center text-sm leading-[18px]">
+              By continuing, you agree to our{" "}
+              <Text className="font-semibold ">Terms of Service</Text> and{" "}
+              <Text className="font-semibold ">Privacy Policy</Text>.
             </Text>
 
             <View nativeID="clerk-captcha" />

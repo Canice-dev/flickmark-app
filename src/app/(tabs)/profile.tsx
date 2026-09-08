@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
@@ -15,11 +16,13 @@ export default function ProfileScreen() {
     }
   };
   return (
-    <View>
-      <Text>ProfileScreen</Text>
-      <Pressable onPress={handleSignOut}>
-        <Text>Sign Out</Text>
-      </Pressable>
-    </View>
+    <SafeAreaView className="px-6">
+      <View>
+        <Text>ProfileScreen</Text>
+        <Pressable onPress={handleSignOut}>
+          <Text>Sign Out</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }

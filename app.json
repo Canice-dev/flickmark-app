@@ -18,7 +18,11 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.canice.flickmartapp"
+      "package": "com.canice.flickmartapp",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "output": "server",
@@ -27,6 +31,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow FlickMart to access photos for your listing.",
+          "microphonePermission": false
+        }
+      ],
       [
         "expo-location",
         {
@@ -47,6 +58,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1f8bdb42-b8f7-42b1-a322-e8c37ab421de"
+      }
     }
   }
 }

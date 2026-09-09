@@ -10,13 +10,13 @@ Build a **functional demo** of Flick Mart: a native Android/iOS marketplace for 
 - Signed-in browse experience; every account can buy and sell.
 - Seller profile: display name and profile photo required before publishing.
 - Listing categories are stored as validated text, rather than in a separate table: Apartment, Self-Contained, Semi self-contained, Single room, Shop/Store, Land, Electronics, Item, or Others.
-- A shared listing form: one image, title, category, price, description, address, city, public latitude/longitude map pin, phone and WhatsApp contacts, and compliance confirmation.
+- A shared listing form: one to six images, title, category, price, description, address, city, public latitude/longitude map pin, phone and WhatsApp contacts, and compliance confirmation. The first image is the cover image.
 - Listing creation limit of five per seller per day and five active listings per seller.
 - Listing states: active, paused, sold, expired, deleted. Active listings expire after 30 days; the seller sees an in-app renewal banner.
 - Browse/search by keyword, category, price range, neighborhood/distance, newest-first; favorites.
 - Listing detail with call and WhatsApp buttons; WhatsApp has a prefilled message containing the listing title.
 - Reporting, analytics events, legal/safety content, and account deletion that removes the account’s listings, photos, favorites, and related data.
-- Expo Router API routes, Neon Postgres, Drizzle, ImageKit signed uploads, and an interactive map.
+- Expo Router API routes, Neon Postgres, Drizzle, Cloudinary signed uploads, and an interactive map.
 
 ### Explicitly deferred
 
@@ -30,7 +30,7 @@ Build a **functional demo** of Flick Mart: a native Android/iOS marketplace for 
 - Server: Expo Router API routes in `src/app`, deployed as a server bundle. API routes require `web.output: "server"` and a deployed server origin for production native builds; the current `app.json` uses static output and must be updated during implementation.
 - Database: Neon Postgres, accessed only from server routes with Drizzle and SQL migrations.
 - Auth: Clerk. Use the Expo-SDK-compatible package versions selected by `npx expo install`, with Clerk dashboard providers enabled for Google, Apple, and email codes. Store sessions securely on device.
-- Media: ImageKit direct uploads using short-lived, server-generated authentication parameters. Never expose ImageKit private keys to the app.
+- Media: Cloudinary direct signed uploads using short-lived, server-generated upload signatures. Never expose the Cloudinary API secret to the app.
 - Maps: Google Maps was selected. See the decision gate below before implementation.
 
 ## 3. Required decision gate: cross-platform map implementation
@@ -52,7 +52,8 @@ Neon is the source of truth. Clerk is the identity provider; store only `clerk_u
 | Entity | Essential fields and constraints |
 | --- | --- |
 | `profiles` | `id`, unique `clerk_user_id`, display name, profile-image URL, timestamps. Profile must be complete before publishing. |
-| `listings` | Owner profile, validated text category, title, required ImageKit `image_url`, description, required numeric price, address, city, public `latitude`/`longitude`, required phone and WhatsApp contacts, lifecycle status, created/updated/expiry timestamps. Active and sold listings appear in discovery; sold listings show a badge. |
+| `listings` | Owner profile, validated text category, title, ordered image URLs, seller-selected `is_featured` boolean, description, required numeric price, address, city, public `latitude`/`longitude`, required phone and WhatsApp contacts, lifecycle status, created/updated/expiry timestamps. Active and sold listings appear in discovery; sold listings show a badge. |
+| `listings.image_urls` | Required PostgreSQL `text[]` of one to six ordered Cloudinary secure delivery URLs. The first URL is the cover image. Cloudinary public IDs are derived and validated from the signed upload response before a listing is created. |
 | `favorites` | Unique pair of profile and listing; cascade delete with profile/listing. |
 | `reports` | Reporter, listing, reason category, optional detail, timestamps, review status. Reports remain operationally visible only while the underlying data exists. |
 | `analytics_events` | Event name, anonymous/session or actor reference as permitted, listing/category-text context, timestamp; never store WhatsApp/call contents. |
@@ -63,8 +64,8 @@ Neon is the source of truth. Clerk is the identity provider; store only `clerk_u
 - API routes derive the actor from a verified Clerk session; never trust a profile ID supplied by the app.
 - Only a listing owner can alter, pause, sell, delete, or renew it.
 - Reject creates after five in the current rolling/calendar day and publishes after five active listings.
-- Validate image ownership, field lengths, category values, Nigerian phone formats, finite coordinates, and a positive price server-side.
-- Account deletion runs server-side: delete ImageKit assets first/with a recoverable job strategy, then cascade-delete Neon records and revoke/deactivate the Clerk account according to the Clerk-supported flow. Handle partial failure idempotently.
+- Validate that one to six uploaded Cloudinary assets belong to the authenticated actor, plus field lengths, category values, Nigerian phone formats, finite coordinates, and a positive price server-side.
+- Account deletion runs server-side: delete Cloudinary assets first/with a recoverable job strategy, then cascade-delete Neon records and revoke/deactivate the Clerk account according to the Clerk-supported flow. Handle partial failure idempotently.
 
 ## 5. App and API shape
 
@@ -82,7 +83,7 @@ Neon is the source of truth. Clerk is the identity provider; store only `clerk_u
 
 - `GET /api/listings`: validated cursor/page query and filters; only active listings for public discovery.
 - `POST /api/listings`, `GET/PATCH/DELETE /api/listings/:id`: create/manage listings with server-enforced limits and ownership.
-- `POST /api/uploads/auth`: authenticate the actor and return short-lived ImageKit upload credentials.
+- `POST /api/uploads/signature`: authenticate the actor and return a short-lived Cloudinary upload signature and constrained upload parameters. The client uploads directly to Cloudinary, then sends the returned secure URLs and public IDs to `POST /api/listings`.
 - `POST/DELETE /api/favorites`: toggle/list favorites.
 - `POST /api/reports`: create a report with rate limiting and reason validation.
 - `GET/PATCH /api/profile`: profile completion and account data.
@@ -97,7 +98,7 @@ Before coding integration work, create organization-owned accounts and document 
 
 1. Clerk: native app configuration, Google, Apple, and email-code providers; production/development redirect URLs; server verification credentials.
 2. Neon: separate development and demo databases, least-privilege connection strings, backups/branching policy.
-3. ImageKit: private key restricted to server environment, upload folder convention, allowed image MIME types/size limits, transformation policy.
+3. Cloudinary: API secret restricted to the server environment, unsigned uploads disabled, per-user upload folder convention, allowed image MIME types/size limits, transformation policy, and delivery-domain configuration.
 4. Google Cloud/maps: billing project, restricted API keys, and the platform-specific SDK APIs dictated by the Day-2 map decision.
 5. Expo/EAS: project ownership, Android package ID, iOS bundle ID, development-build credentials, server hosting/origin.
 
@@ -117,8 +118,8 @@ Use `.env.example` with variable names only. Commit neither secrets nor real URL
 ### Days 3–5 — seller foundation
 
 1. Build profile completion/editing and server-side profile authorization.
-2. Implement ImageKit signed upload flow with upload progress and deletion of an abandoned local selection where practical.
-3. Build the shared listing form, manual map pin selection, field validation, create endpoint, and enforced daily/active limits.
+2. Implement the Cloudinary signed upload flow: permit one to six photos, show upload progress, preserve the selected order, and delete abandoned uploaded assets where practical.
+3. Build the shared listing form, manual map pin selection, field validation, transactional create endpoint for the listing and its images, and enforced daily/active limits.
 4. Implement listing draft/preview behavior only if it fits; otherwise keep the form in memory and publish directly.
 
 ### Days 6–8 — marketplace experience
@@ -131,7 +132,7 @@ Use `.env.example` with variable names only. Commit neither secrets nor real URL
 
 1. Add reporting, compliant-listing confirmation, prohibited-items/safety content, Terms, and Privacy links.
 2. Add allowlisted analytics events and verify no contact-message contents or secrets are logged.
-3. Implement account deletion with tested database cascades and ImageKit cleanup; make retries safe.
+3. Implement account deletion with tested database cascades and Cloudinary cleanup; make retries safe.
 4. Add basic API rate limits for listing creation, reports, upload-auth generation, and events.
 
 ### Days 11–12 — hardening and demo readiness
@@ -151,13 +152,13 @@ Use `.env.example` with variable names only. Commit neither secrets nor real URL
 ## 8. Acceptance checklist
 
 - A new user can complete Google, Apple, or email-code sign-in and cannot browse application screens unauthenticated.
-- A completed profile can create a listing with one valid image and a public map pin.
+- A completed profile can create a listing with one to six valid Cloudinary-hosted images and a public map pin.
 - The API rejects a sixth daily create and a sixth active listing.
 - A buyer can find an active listing with search/filtering, save it, open its seller, call, and launch WhatsApp with the listing title prefilled.
 - Seller lifecycle actions change what buyers can discover; expired listings do not appear as active.
 - A report records a valid queue item visible in the database dashboard.
 - Unauthorized actors cannot edit/delete another seller’s listing or upload on behalf of another user.
-- Deleting an account removes its profile, listings, favorite records, and ImageKit assets without leaving public listing data behind.
+- Deleting an account removes its profile, listings, favorite records, and Cloudinary assets without leaving public listing data behind.
 - The app has understandable loading, empty, validation, offline, and API-failure states on Android and iOS.
 
 ## 9. Known risks to actively manage

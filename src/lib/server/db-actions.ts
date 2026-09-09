@@ -14,7 +14,8 @@ const listingWithOwner = {
   id: listings.id,
   category: listings.category,
   title: listings.title,
-  imageUrl: listings.imageUrl,
+  imageUrls: listings.imageUrls,
+  isFeatured: listings.isFeatured,
   description: listings.description,
   price: listings.price,
   address: listings.address,
@@ -38,7 +39,8 @@ export type CreateListingInput = Pick<
   typeof listings.$inferInsert,
   | "category"
   | "title"
-  | "imageUrl"
+  | "imageUrls"
+  | "isFeatured"
   | "description"
   | "price"
   | "address"

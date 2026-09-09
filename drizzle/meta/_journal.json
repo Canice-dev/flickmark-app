@@ -8,6 +8,20 @@
       "when": 1788727614470,
       "tag": "0000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788980475474,
+      "tag": "0001_listing_image_urls",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788983040938,
+      "tag": "0002_listing_featured",
+      "breakpoints": true
     }
   ]
 }

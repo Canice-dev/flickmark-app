@@ -113,7 +113,7 @@ export default function SignIn() {
             console.log(session?.currentTask);
             return;
           }
-          const url = decorateUrl("/");
+          const url = decorateUrl("/(tabs)");
           router.replace(url as any);
         },
       });

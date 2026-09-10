@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@clerk/expo";
 import { Asset } from "expo-asset";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,7 +13,19 @@ const googleLogo = Asset.fromModule(
 ).uri;
 
 export default function MainScreen() {
+  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
+
+  // The root route is only the welcome screen for signed-out visitors. Without
+  // this guard, an authenticated session can land here after app launch or a
+  // completed auth flow instead of opening the home tab.
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (isSignedIn) {
+    return <Redirect href="/(tabs)" />;
+  }
 
   return (
     <View className="flex-1 ">

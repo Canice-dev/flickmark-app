@@ -1,5 +1,5 @@
 import { createClerkClient } from "@clerk/backend";
-import { createListing } from "@/lib/server/db-actions";
+import { createListing, getAllListings } from "@/lib/server/db-actions";
 
 const categories = ["Housing", "Electronics", "Fashion", "Other"] as const;
 const clerkSecretKey = process.env.CLERK_SECRET_KEY;
@@ -7,6 +7,19 @@ const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
 
 type ListingRequest = Record<string, unknown>;
+
+/** Returns public, active listings for the browse feed. */
+export async function GET() {
+  try {
+    const listings = await getAllListings();
+    return Response.json({ listings });
+  } catch {
+    return Response.json(
+      { error: "Unable to load listings" },
+      { status: 500 },
+    );
+  }
+}
 
 function requiredText(value: unknown, field: string, maximumLength: number) {
   if (typeof value !== "string") {

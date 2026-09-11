@@ -256,14 +256,13 @@ export default function HomeScreen() {
 
               <Pressable
                 accessibilityLabel="Search listings"
-                className="mt-3 min-h-14 flex-row items-center rounded-2xl border border-[#E7E4DE] bg-white px-4"
+                className="mt-3 min-h-14 flex-row items-center rounded-full border border-[#E7E4DE] bg-white px-4"
                 onPress={() => router.push("/(tabs)/search")}
               >
                 <Ionicons name="search-outline" size={21} color="#65716D" />
                 <Text className="ml-3 flex-1 text-[15px] text-[#65716D]">
                   Search apartments, phones, land…
                 </Text>
-                <Ionicons name="options-outline" size={20} color="#163B35" />
               </Pressable>
             </View>
 

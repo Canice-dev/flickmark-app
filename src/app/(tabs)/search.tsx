@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import FilterModal, {
   defaultSearchFilters,
@@ -38,6 +39,7 @@ function formatPrice(price: string) {
 }
 
 function ListingResult({ listing }: { listing: Listing }) {
+  const router = useRouter();
   const [cardWidth, setCardWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<number[]>([]);
@@ -137,6 +139,7 @@ function ListingResult({ listing }: { listing: Listing }) {
         accessibilityRole="button"
         accessibilityLabel={`Open ${listing.title}`}
         className="px-1 pb-2 pt-3"
+        onPress={() => router.push({ pathname: "/listing/[id]", params: { id: listing.id } })}
       >
         <Text
           className="text-[15px] font-semibold leading-5 text-[#263330]"

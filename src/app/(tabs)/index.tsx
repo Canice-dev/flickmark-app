@@ -58,6 +58,7 @@ function ListingCard({
   listing: Listing;
   horizontal?: boolean;
 }) {
+  const router = useRouter();
   const [imageFailed, setImageFailed] = useState(false);
   const coverImage = listing.imageUrls[0];
   const imageContent =
@@ -80,6 +81,7 @@ function ListingCard({
       <Pressable
         accessibilityLabel={`Open ${listing.title}`}
         className="mx-5 mb-3 flex-row items-center gap-3 overflow-hidden rounded-2xl border border-[#FAF8F4]"
+        onPress={() => router.push({ pathname: "/listing/[id]", params: { id: listing.id } })}
       >
         <View className="h-[120px] w-[140px] overflow-hidden rounded-xl bg-[#E8E8E8]">
           {imageContent}
@@ -126,7 +128,11 @@ function ListingCard({
   }
 
   return (
-    <Pressable className="overflow-hidden rounded-2xl" style={{ width: 210 }}>
+    <Pressable
+      className="overflow-hidden rounded-2xl"
+      style={{ width: 210 }}
+      onPress={() => router.push({ pathname: "/listing/[id]", params: { id: listing.id } })}
+    >
       <View className="aspect-[0.95] bg-[#E7E4DE]">
         {imageContent}
         {listing.status === "sold" && (

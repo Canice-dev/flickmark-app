@@ -13,6 +13,10 @@ export async function POST(request: Request) {
     if (event.type === "user.created") {
       await syncUser({
         clerkUserId: event.data.id,
+        email:
+          event.data.email_addresses?.find(
+            (address) => address.id === event.data.primary_email_address_id,
+          )?.email_address ?? event.data.email_addresses?.[0]?.email_address ?? null,
         displayName: getDisplayName(event.data.first_name, event.data.last_name),
         profileImageUrl: event.data.image_url ?? null,
       });

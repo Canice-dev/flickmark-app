@@ -1,21 +1,17 @@
-import { and, desc, eq, gt, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "./db/client";
 import { favorites, listings, users } from "./db/schema";
 
 const listingOwner = alias(users, "listing_owner");
 
-const visibleListing = () => and(
-  inArray(listings.status, ["active", "sold"]),
-  gt(listings.expiresAt, new Date()),
-);
+const visibleListing = () => inArray(listings.status, ["active", "sold"]);
 
 const listingWithOwner = {
   id: listings.id,
   category: listings.category,
   title: listings.title,
   imageUrls: listings.imageUrls,
-  isFeatured: listings.isFeatured,
   description: listings.description,
   price: listings.price,
   address: listings.address,
@@ -25,7 +21,6 @@ const listingWithOwner = {
   contactPhone: listings.contactPhone,
   contactWhatsapp: listings.contactWhatsapp,
   status: listings.status,
-  expiresAt: listings.expiresAt,
   createdAt: listings.createdAt,
   updatedAt: listings.updatedAt,
   owner: {
@@ -40,7 +35,6 @@ export type CreateListingInput = Pick<
   | "category"
   | "title"
   | "imageUrls"
-  | "isFeatured"
   | "description"
   | "price"
   | "address"
@@ -53,6 +47,7 @@ export type CreateListingInput = Pick<
 
 export type SyncUserInput = {
   clerkUserId: string;
+  email: string | null;
   displayName: string | null;
   profileImageUrl: string | null;
 };
@@ -65,24 +60,17 @@ export async function syncUser(input: SyncUserInput) {
   const [createdUser] = await db
     .insert(users)
     .values(input)
-    .onConflictDoNothing({ target: users.clerkUserId })
+    .onConflictDoUpdate({
+      target: users.clerkUserId,
+      set: { email: input.email, updatedAt: new Date() },
+    })
     .returning();
 
-  if (createdUser) {
-    return createdUser;
-  }
-
-  const [existingUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.clerkUserId, input.clerkUserId))
-    .limit(1);
-
-  if (!existingUser) {
+  if (!createdUser) {
     throw new Error("User sync failed");
   }
 
-  return existingUser;
+  return createdUser;
 }
 
 /** Permanently deletes a user and all records that reference them with cascade rules. */
@@ -156,7 +144,7 @@ export function deleteListing(clerkUserId: string, listingId: string) {
   return updateOwnedListingStatus(clerkUserId, listingId, "deleted");
 }
 
-/** Returns visible, unexpired listings for public discovery, newest first. */
+/** Returns visible listings for public discovery, newest first. */
 export async function getAllListings() {
   return db
     .select(listingWithOwner)
@@ -166,7 +154,7 @@ export async function getAllListings() {
     .orderBy(desc(listings.createdAt));
 }
 
-/** Returns one visible, unexpired listing for public display. */
+/** Returns one visible listing for public display. */
 export async function getListingById(listingId: string) {
   const [listing] = await db
     .select(listingWithOwner)
@@ -187,7 +175,7 @@ export async function getListingsByUser(clerkUserId: string) {
     .orderBy(desc(listings.createdAt));
 }
 
-/** Returns visible, unexpired listings saved by the authenticated Clerk user. */
+/** Returns visible listings saved by the authenticated Clerk user. */
 export async function getAllFavorites(clerkUserId: string) {
   return db
     .select({

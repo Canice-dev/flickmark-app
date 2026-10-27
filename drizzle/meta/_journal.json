@@ -22,6 +22,20 @@
       "when": 1788983040938,
       "tag": "0002_listing_featured",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793097359286,
+      "tag": "0003_persist_user_email_remove_listing_expiration",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793097969782,
+      "tag": "0004_remove_listing_featured",
+      "breakpoints": true
     }
   ]
 }

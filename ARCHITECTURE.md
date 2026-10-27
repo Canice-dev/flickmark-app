@@ -134,7 +134,7 @@ This layout is a target structure; it should be introduced incrementally rather 
 - A `profiles` row is associated one-to-one with a unique Clerk user ID.
 - Buyer and seller are capabilities of one account. Publishing is permitted after profile completion; there is no separate seller login.
 - A listing belongs to exactly one profile. Only its owner may edit lifecycle state or delete it.
-- Only active, non-expired listings appear in discovery endpoints.
+- Only active listings appear in discovery endpoints; listings do not expire automatically.
 - A favorite is unique per profile/listing pair.
 - A report records reporter, target listing, reason, detail, and review state.
 - Pricing uses integer minor currency units (kobo) to avoid floating-point errors. Contact-price listings have no amount.

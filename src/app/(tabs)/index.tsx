@@ -21,7 +21,6 @@ type Listing = {
   imageUrls: string[];
   address: string;
   city: string;
-  isFeatured: boolean;
   status: "active" | "sold";
 };
 
@@ -51,13 +50,7 @@ function formatPrice(price: string) {
     : "Price on request";
 }
 
-function ListingCard({
-  listing,
-  horizontal = false,
-}: {
-  listing: Listing;
-  horizontal?: boolean;
-}) {
+function ListingCard({ listing }: { listing: Listing }) {
   const router = useRouter();
   const [imageFailed, setImageFailed] = useState(false);
   const coverImage = listing.imageUrls[0];
@@ -76,8 +69,7 @@ function ListingCard({
       </View>
     );
 
-  if (!horizontal) {
-    return (
+  return (
       <Pressable
         accessibilityLabel={`Open ${listing.title}`}
         className="mx-5 mb-3 flex-row items-center gap-3 overflow-hidden rounded-2xl border border-[#FAF8F4]"
@@ -125,44 +117,6 @@ function ListingCard({
         </Pressable>
       </Pressable>
     );
-  }
-
-  return (
-    <Pressable
-      className="overflow-hidden rounded-2xl"
-      style={{ width: 210 }}
-      onPress={() => router.push({ pathname: "/listing/[id]", params: { id: listing.id } })}
-    >
-      <View className="aspect-[0.95] bg-[#E7E4DE]">
-        {imageContent}
-        {listing.status === "sold" && (
-          <View className="absolute left-2 top-2 rounded-full bg-[#F2B84B] px-2 py-1">
-            <Text className="text-[11px] font-bold text-[#1C2523]">Sold</Text>
-          </View>
-        )}
-        <Pressable
-          accessibilityLabel={`Save ${listing.title}`}
-          className="absolute right-2 top-2 h-8 w-8 items-center justify-center rounded-full bg-white/95"
-        >
-          <Ionicons name="bookmark-outline" size={16} color="#163B35" />
-        </Pressable>
-      </View>
-      <View className="p-3">
-        <Text
-          className="text-sm font-semibold text-[#1C2523]"
-          numberOfLines={1}
-        >
-          {listing.title}
-        </Text>
-        <Text className="mt-1 text-xs text-[#65716D]" numberOfLines={1}>
-          {listing.address}, {listing.city}
-        </Text>
-        <Text className="mt-2 text-[15px] font-bold text-[#163B35]">
-          {formatPrice(listing.price)}
-        </Text>
-      </View>
-    </Pressable>
-  );
 }
 
 export default function HomeScreen() {
@@ -196,26 +150,14 @@ export default function HomeScreen() {
     void loadListings();
   }, [loadListings]);
 
-  const { featuredListings, standardListings } = useMemo(() => {
+  const visibleListings = useMemo(() => {
     const categoryListings =
       selectedCategory === "All"
         ? listings
         : listings.filter((listing) => listing.category === selectedCategory);
-
-    return {
-      featuredListings: categoryListings.filter(
-        (listing) => listing.isFeatured,
-      ),
-      standardListings: categoryListings.filter(
-        (listing) => !listing.isFeatured,
-      ),
-    };
+    return categoryListings;
   }, [listings, selectedCategory]);
 
-  const renderFeaturedListing: ListRenderItem<Listing> = useCallback(
-    ({ item }) => <ListingCard listing={item} horizontal />,
-    [],
-  );
   const renderStandardListing: ListRenderItem<Listing> = useCallback(
     ({ item }) => <ListingCard listing={item} />,
     [],
@@ -225,7 +167,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-[#FAF8F4]" edges={["top"]}>
       <FlatList
-        data={standardListings}
+        data={visibleListings}
         renderItem={renderStandardListing}
         keyExtractor={(listing) => listing.id}
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -321,29 +263,6 @@ export default function HomeScreen() {
               </View>
             ) : (
               <>
-                {featuredListings.length > 0 && (
-                  <View className="mt-6">
-                    <View className="mb-4 flex-row items-center justify-between px-5">
-                      <Text className="text-xl font-bold text-[#1C2523]">
-                        Featured listings
-                      </Text>
-                      <Pressable onPress={() => router.push("/(tabs)/search")}>
-                        <Text className="text-sm font-bold text-[#247A62]">
-                          See all
-                        </Text>
-                      </Pressable>
-                    </View>
-                    <FlatList
-                      data={featuredListings}
-                      renderItem={renderFeaturedListing}
-                      keyExtractor={(listing) => listing.id}
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={{ gap: 14, paddingHorizontal: 20 }}
-                    />
-                  </View>
-                )}
-
                 <View className="mb-4 mt-7 px-5">
                   <Text className="text-xl font-bold text-[#1C2523]">
                     Recent listings
@@ -358,14 +277,10 @@ export default function HomeScreen() {
             <View className="mx-5 items-center rounded-2xl border border-[#E7E4DE] bg-white px-6 py-10">
               <Ionicons name="search-outline" size={28} color="#65716D" />
               <Text className="mt-3 text-center font-semibold text-[#1C2523]">
-                {featuredListings.length
-                  ? "No more listings"
-                  : "No listings yet"}
+                No listings yet
               </Text>
               <Text className="mt-1 text-center text-sm text-[#65716D]">
-                {featuredListings.length
-                  ? "Check the featured listings above."
-                  : "Check back soon for new finds near you."}
+                Check back soon for new finds near you.
               </Text>
             </View>
           ) : null

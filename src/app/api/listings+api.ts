@@ -123,16 +123,11 @@ export async function POST(request: Request) {
       throw new Error("Price must be a positive amount");
     }
 
-    if (body.isFeatured !== undefined && typeof body.isFeatured !== "boolean") {
-      throw new Error("Featured selection is invalid");
-    }
-
     const { userId } = requestState.toAuth();
     const listing = await createListing(userId, {
       category,
       title: requiredText(body.title, "Title", 160),
       imageUrls: imageUrls(body.imageUrls, userId, cloudName),
-      isFeatured: body.isFeatured === true,
       description: requiredText(body.description, "Description", 5_000),
       price,
       address: requiredText(body.address, "Address", 500),

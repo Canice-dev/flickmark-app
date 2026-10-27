@@ -42,8 +42,12 @@ const useSocialAuth = () => {
         },
       });
     } catch (error) {
-      console.log("Error in social auth", error);
-      Alert.alert("Error Failed to sign in. Please try again.");
+      console.error("Social authentication failed:", error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Please check your connection and try again.";
+      Alert.alert("Unable to continue with Apple or Google", message);
     } finally {
       setLoadingStrategy(null);
     }

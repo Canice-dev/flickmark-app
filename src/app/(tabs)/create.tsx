@@ -39,7 +39,6 @@ type ListingForm = {
   contactWhatsapp: string;
   latitude: string;
   longitude: string;
-  isFeatured: boolean;
 };
 
 type UploadSignature = {
@@ -62,7 +61,6 @@ const initialForm: ListingForm = {
   contactWhatsapp: "",
   latitude: "",
   longitude: "",
-  isFeatured: false,
 };
 
 async function responseError(response: Response, fallback: string) {
@@ -351,17 +349,6 @@ export default function CreateScreen() {
           <FormTextInput label="Price" value={form.price} onChangeText={(value) => updateForm("price", value)} placeholder="e.g. 120000" keyboardType="decimal-pad" />
           <FormTextInput label="Mobile Number" value={form.contactPhone} onChangeText={(value) => updateForm("contactPhone", value)} placeholder="e.g. 09134859402" keyboardType="phone-pad" />
           <FormTextInput label="WhatsApp Number" value={form.contactWhatsapp} onChangeText={(value) => updateForm("contactWhatsapp", value)} placeholder="e.g. 09134859402" keyboardType="phone-pad" />
-
-          <Pressable
-            onPress={() => updateForm("isFeatured", !form.isFeatured)}
-            className={`mt-3 flex-row items-center justify-between rounded-2xl border px-4 py-4 ${form.isFeatured ? "border-[#15705B] bg-[#EAF4F1]" : "border-gray-200 bg-white"}`}
-          >
-            <View className="mr-4 flex-1">
-              <Text className="text-base font-bold text-[#101114]">Feature this listing</Text>
-              <Text className="mt-1 text-sm text-slate-600">Show this listing as featured.</Text>
-            </View>
-            <Ionicons name={form.isFeatured ? "checkbox" : "square-outline"} size={25} color={form.isFeatured ? "#15705B" : "#64748B"} />
-          </Pressable>
 
           <View className="mb-3 mt-6">
             <View className="flex-row items-center justify-between">

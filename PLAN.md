@@ -12,7 +12,7 @@ Build a **functional demo** of Flick Mart: a native Android/iOS marketplace for 
 - Listing categories are stored as validated text, rather than in a separate table: Apartment, Self-Contained, Semi self-contained, Single room, Shop/Store, Land, Electronics, Item, or Others.
 - A shared listing form: one to six images, title, category, price, description, address, city, public latitude/longitude map pin, phone and WhatsApp contacts, and compliance confirmation. The first image is the cover image.
 - Listing creation limit of five per seller per day and five active listings per seller.
-- Listing states: active, paused, sold, expired, deleted. Active listings expire after 30 days; the seller sees an in-app renewal banner.
+- Listing states: active, paused, sold, deleted. Listings do not expire automatically.
 - Browse/search by keyword, category, price range, neighborhood/distance, newest-first; favorites.
 - Listing detail with call and WhatsApp buttons; WhatsApp has a prefilled message containing the listing title.
 - Reporting, analytics events, legal/safety content, and account deletion that removes the account’s listings, photos, favorites, and related data.
@@ -52,7 +52,7 @@ Neon is the source of truth. Clerk is the identity provider; store only `clerk_u
 | Entity | Essential fields and constraints |
 | --- | --- |
 | `profiles` | `id`, unique `clerk_user_id`, display name, profile-image URL, timestamps. Profile must be complete before publishing. |
-| `listings` | Owner profile, validated text category, title, ordered image URLs, seller-selected `is_featured` boolean, description, required numeric price, address, city, public `latitude`/`longitude`, required phone and WhatsApp contacts, lifecycle status, created/updated/expiry timestamps. Active and sold listings appear in discovery; sold listings show a badge. |
+| `listings` | Owner profile, validated text category, title, ordered image URLs, description, required numeric price, address, city, public `latitude`/`longitude`, required phone and WhatsApp contacts, lifecycle status, and created/updated timestamps. Active and sold listings appear in discovery; sold listings show a badge. |
 | `listings.image_urls` | Required PostgreSQL `text[]` of one to six ordered Cloudinary secure delivery URLs. The first URL is the cover image. Cloudinary public IDs are derived and validated from the signed upload response before a listing is created. |
 | `favorites` | Unique pair of profile and listing; cascade delete with profile/listing. |
 | `reports` | Reporter, listing, reason category, optional detail, timestamps, review status. Reports remain operationally visible only while the underlying data exists. |
@@ -76,7 +76,7 @@ Neon is the source of truth. Clerk is the identity provider; store only `clerk_u
 - `(app)/listing/[id]`: listing detail, carousel, favorite, report, call, WhatsApp, map preview.
 - `(app)/sell`: profile-completion gate, shared listing form, photo upload, pin picker, preview/publish.
 - `(app)/favorites`: saved active listings.
-- `(app)/profile`: public seller profile and seller dashboard (active/paused/sold/expired listings, renewal banner).
+- `(app)/profile`: public seller profile and seller dashboard (active/paused/sold listings).
 - `(app)/settings`: account, safety/legal links, deletion request/action.
 
 ### API route responsibilities
@@ -155,7 +155,7 @@ Use `.env.example` with variable names only. Commit neither secrets nor real URL
 - A completed profile can create a listing with one to six valid Cloudinary-hosted images and a public map pin.
 - The API rejects a sixth daily create and a sixth active listing.
 - A buyer can find an active listing with search/filtering, save it, open its seller, call, and launch WhatsApp with the listing title prefilled.
-- Seller lifecycle actions change what buyers can discover; expired listings do not appear as active.
+- Seller lifecycle actions change what buyers can discover; listings remain active until the seller changes their status.
 - A report records a valid queue item visible in the database dashboard.
 - Unauthorized actors cannot edit/delete another seller’s listing or upload on behalf of another user.
 - Deleting an account removes its profile, listings, favorite records, and Cloudinary assets without leaving public listing data behind.

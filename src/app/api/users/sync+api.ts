@@ -31,6 +31,7 @@ export async function POST(request: Request) {
   const clerkUser = await clerk.users.getUser(userId);
   const user = await syncUser({
     clerkUserId: userId,
+    email: clerkUser.primaryEmailAddress?.emailAddress ?? null,
     displayName: getDisplayName(clerkUser.firstName, clerkUser.lastName),
     profileImageUrl: clerkUser.imageUrl ?? null,
   });

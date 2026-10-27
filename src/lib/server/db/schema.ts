@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -17,7 +16,6 @@ export const listingStatus = pgEnum("listing_status", [
   "active",
   "paused",
   "sold",
-  "expired",
   "deleted",
 ]);
 export const reportStatus = pgEnum("report_status", ["pending", "reviewed"]);
@@ -31,6 +29,7 @@ export const users = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     clerkUserId: varchar("clerk_user_id", { length: 255 }).notNull(),
+    email: varchar("email", { length: 320 }),
     displayName: varchar("display_name", { length: 100 }),
     profileImageUrl: text("profile_image_url"),
     isSeller: boolean("is_seller").notNull().default(false),
@@ -56,7 +55,6 @@ export const listings = pgTable(
     category: text("category").notNull(),
     title: varchar("title", { length: 160 }).notNull(),
     imageUrls: text("image_urls").array().notNull(),
-    isFeatured: boolean("is_featured").notNull().default(false),
     description: text("description").notNull(),
     price: numeric("price").notNull(),
     address: text("address").notNull(),
@@ -66,9 +64,6 @@ export const listings = pgTable(
     contactPhone: text("contact_phone").notNull(),
     contactWhatsapp: text("contact_whatsapp").notNull(),
     status: listingStatus("status").notNull().default("active"),
-    expiresAt: timestamp("expires_at", { withTimezone: true })
-      .notNull()
-      .default(sql`now() + interval '30 days'`),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

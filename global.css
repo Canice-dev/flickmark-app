@@ -1,3 +1,34 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* FlickMart semantic color tokens. Use the same token names in light and dark UI. */
+:root {
+  --color-background: 247 247 248;
+  --color-surface: 255 255 255;
+  --color-foreground: 22 22 22;
+  --color-muted: 128 128 132;
+  --color-border: 233 233 236;
+  --color-primary: 26 26 26;
+  --color-primary-soft: 242 242 242;
+  --color-on-primary: 255 255 255;
+  --color-danger: 220 72 72;
+  --color-warning: 255 203 70;
+  --color-on-warning: 30 26 14;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: 8 8 9;
+    --color-surface: 20 20 22;
+    --color-foreground: 246 246 247;
+    --color-muted: 153 153 158;
+    --color-border: 43 43 47;
+    --color-primary: 232 234 235; /*header text*/
+    --color-primary-soft: 26, 26, 26;
+    --color-on-primary: 255 255 255;
+    --color-danger: 255 112 112;
+    --color-warning: 255 203 70;
+    --color-on-warning: 30 26 14;
+  }
+}

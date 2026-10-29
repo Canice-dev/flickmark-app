@@ -3,6 +3,8 @@ import { useAuth, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,13 +22,15 @@ function MenuItem({
   destructive = false,
   onPress,
 }: MenuItemProps) {
-  const iconColor = destructive ? "#D95757" : "#68736F";
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const iconColor = destructive ? "#D95757" : isDark ? "#A7B1AD" : "#68736F";
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      className="flex-row items-center px-4 py-3.5 active:bg-[#F7F8F8]"
+      className="flex-row items-center px-4 py-3.5 active:bg-[#F7F8F8] dark:active:bg-[#272A29]"
       onPress={onPress}
     >
       <View className="h-7 w-7 items-center justify-center">
@@ -34,7 +38,7 @@ function MenuItem({
       </View>
       <Text
         className={`ml-2.5 flex-1 text-[14px] font-medium ${
-          destructive ? "text-[#D95757]" : "text-[#263330]"
+          destructive ? "text-[#D95757]" : "text-foreground"
         }`}
       >
         {label}
@@ -42,7 +46,7 @@ function MenuItem({
       <Ionicons
         name="chevron-forward"
         size={17}
-        color={destructive ? "#E59B9B" : "#9AA39F"}
+        color={destructive ? "#E59B9B" : isDark ? "#7F8B86" : "#9AA39F"}
       />
     </Pressable>
   );
@@ -57,10 +61,10 @@ function Section({
 }) {
   return (
     <View className="mt-6">
-      <Text className="mb-2 px-1 text-xs font-semibold text-[#7E8985]">
+      <Text className="mb-2 px-1 text-xs font-semibold text-muted">
         {title}
       </Text>
-      <View className="overflow-hidden rounded-2xl bg-white">{children}</View>
+      <View className="overflow-hidden rounded-2xl bg-surface">{children}</View>
     </View>
   );
 }
@@ -69,6 +73,7 @@ export default function ProfileScreen() {
   const { signOut } = useAuth();
   const { user } = useUser();
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
   const isSeller = useUserStore((state) => state.isSeller);
   const [avatarFailed, setAvatarFailed] = useState(false);
 
@@ -95,12 +100,13 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5F6F7]" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       <ScrollView
         contentContainerClassName="px-5 pb-10"
         showsVerticalScrollIndicator={false}
       >
-        <Text className="pb-5 pt-4 text-[26px] font-bold tracking-tight text-[#202A27]">
+        <Text className="pb-5 pt-4 text-[20px] font-bold tracking-tight text-primary">
           Profile
         </Text>
 
@@ -121,27 +127,20 @@ export default function ProfileScreen() {
           )}
           <View className="ml-3 flex-1">
             <Text
-              className="text-[15px] font-bold text-[#263330]"
+              className="text-[16px] font-bold text-foreground"
               numberOfLines={1}
             >
               {displayName}
             </Text>
             {email && (
-              <Text className="mt-0.5 text-xs text-[#7E8985]" numberOfLines={1}>
+              <Text className="mt-0.5 text-[12px] text-muted" numberOfLines={1}>
                 {email}
               </Text>
             )}
-            <Text className="mt-1.5 text-xs font-medium text-[#4E746A]">
+            <Text className="mt-1.5 text-[12px] font-medium text-[#4E746A] dark:text-[#83B5A7]">
               {isSeller ? "Seller account" : "Buyer account"}
             </Text>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Edit profile"
-            className="h-9 w-9 items-center justify-center rounded-full bg-white active:bg-[#EEF0F0]"
-          >
-            <Ionicons name="pencil" size={16} color="#50605B" />
-          </Pressable>
         </View>
 
         <Section title="Marketplace">
@@ -179,7 +178,7 @@ export default function ProfileScreen() {
           />
         </Section>
 
-        <Text className="mt-6 text-center text-xs text-[#9AA39F]">
+        <Text className="mt-6 text-center text-xs text-muted">
           FlickMart · Enugu, Nigeria
         </Text>
       </ScrollView>

@@ -52,18 +52,9 @@ function MenuItem({
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ children }: { children: React.ReactNode }) {
   return (
     <View className="mt-6">
-      <Text className="mb-2 px-1 text-xs font-semibold text-muted">
-        {title}
-      </Text>
       <View className="overflow-hidden rounded-2xl bg-surface">{children}</View>
     </View>
   );
@@ -84,12 +75,12 @@ export default function ProfileScreen() {
     Alert.alert("Sign out?", "You can sign back in whenever you need to.", [
       { text: "Cancel", style: "cancel" },
       {
-        text: "Sign out",
+        text: "Ok",
         style: "destructive",
         onPress: async () => {
           try {
             await signOut();
-            router.replace("/");
+            router.replace("/(auth)");
           } catch (error) {
             console.error("Error signing out:", error);
             Alert.alert("Couldn't sign out", "Please try again.");
@@ -143,44 +134,17 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <Section title="Marketplace">
-          <MenuItem
-            icon="add-circle-outline"
-            label="Post a listing"
-            onPress={() => router.push("/(tabs)/create")}
-          />
-          <MenuItem
-            icon="grid-outline"
-            label="My listings"
-            onPress={() => router.push("/(tabs)/create")}
-          />
-          <MenuItem
-            icon="bookmark-outline"
-            label="Saved items"
-            onPress={() => router.push("/(tabs)/saved")}
-          />
-        </Section>
-
-        <Section title="Account">
-          <MenuItem icon="person-outline" label="Personal details" />
-          <MenuItem icon="notifications-outline" label="Notifications" />
-          <MenuItem icon="shield-checkmark-outline" label="Safety centre" />
-        </Section>
-
-        <Section title="Support">
-          <MenuItem icon="settings-outline" label="Settings" />
-          <MenuItem icon="help-circle-outline" label="Help & support" />
+        <Section>
+          <MenuItem icon="settings-outline" label="Account settings" />
+          <MenuItem icon="help-circle-outline" label="Get help" />
+          <MenuItem icon="document-text-outline" label="Legal" />
           <MenuItem
             icon="log-out-outline"
-            label="Sign out"
+            label="Logout"
             destructive
             onPress={handleSignOut}
           />
         </Section>
-
-        <Text className="mt-6 text-center text-xs text-muted">
-          FlickMart · Enugu, Nigeria
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );

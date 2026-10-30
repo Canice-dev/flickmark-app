@@ -1,11 +1,12 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import FilterModal, {
   defaultSearchFilters,
   SearchFilters,
 } from "@/components/FilterModal";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -40,6 +41,8 @@ function formatPrice(price: string) {
 
 function ListingResult({ listing }: { listing: Listing }) {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [cardWidth, setCardWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<number[]>([]);
@@ -50,9 +53,9 @@ function ListingResult({ listing }: { listing: Listing }) {
   };
 
   return (
-    <View className="mb-5 bg-[#F5F6F7]">
+    <View className="mb-5 overflow-hidden rounded-3xl border border-border bg-surface">
       <View
-        className="h-64 w-full overflow-hidden rounded-3xl bg-[#F5F6F7]"
+        className="h-64 w-full overflow-hidden bg-primary-soft"
         onLayout={(event) => setCardWidth(event.nativeEvent.layout.width)}
       >
         {hasImages && cardWidth > 0 ? (
@@ -83,7 +86,7 @@ function ListingResult({ listing }: { listing: Listing }) {
                       <Ionicons
                         name="image-outline"
                         size={30}
-                        color="#84908B"
+                        color={isDark ? "#9AA49F" : "#84908B"}
                       />
                     </View>
                   ) : (
@@ -116,15 +119,19 @@ function ListingResult({ listing }: { listing: Listing }) {
           </>
         ) : (
           <View className="flex-1 items-center justify-center">
-            <Ionicons name="image-outline" size={32} color="#84908B" />
-            <Text className="mt-2 text-xs font-medium text-[#84908B]">
+            <Ionicons
+              name="image-outline"
+              size={32}
+              color={isDark ? "#9AA49F" : "#84908B"}
+            />
+            <Text className="mt-2 text-xs font-medium text-muted">
               No photos available
             </Text>
           </View>
         )}
         {listing.status === "sold" && (
-          <View className="absolute left-2 top-2 rounded-full bg-[#FFF3D5] px-2 py-1">
-            <Text className="text-[10px] font-bold text-[#916000]">Sold</Text>
+          <View className="absolute left-2 top-2 rounded-full bg-warning px-2 py-1">
+            <Text className="text-[10px] font-bold text-on-warning">Sold</Text>
           </View>
         )}
         <Pressable
@@ -138,25 +145,31 @@ function ListingResult({ listing }: { listing: Listing }) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Open ${listing.title}`}
-        className="px-1 pb-2 pt-3"
-        onPress={() => router.push({ pathname: "/listing/[id]", params: { id: listing.id } })}
+        className="px-3 pb-4 pt-3"
+        onPress={() =>
+          router.push({ pathname: "/listing/[id]", params: { id: listing.id } })
+        }
       >
         <Text
-          className="text-[15px] font-semibold leading-5 text-[#263330]"
+          className="text-[15px] font-semibold leading-5 text-foreground"
           numberOfLines={2}
         >
           {listing.title}
         </Text>
         <View className="mt-2 flex-row items-center">
-          <Ionicons name="location-outline" size={14} color="#84908B" />
+          <Ionicons
+            name="location-outline"
+            size={14}
+            color={isDark ? "#9AA49F" : "#84908B"}
+          />
           <Text
-            className="ml-1 flex-1 text-xs text-[#7E8985]"
+            className="ml-1 flex-1 text-xs text-muted"
             numberOfLines={1}
           >
             {listing.address}, {listing.city}
           </Text>
         </View>
-        <Text className="mt-3 text-[15px] font-bold text-[#1E584C]">
+        <Text className="mt-3 text-[15px] font-bold text-[#1E584C] dark:text-[#8BC5B3]">
           {formatPrice(listing.price)}
         </Text>
       </Pressable>
@@ -165,6 +178,8 @@ function ListingResult({ listing }: { listing: Listing }) {
 }
 
 export default function SearchScreen() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [listings, setListings] = useState<Listing[]>([]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
@@ -241,7 +256,7 @@ export default function SearchScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5F6F7]" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       <FlatList
         data={results}
         renderItem={renderResult}
@@ -253,34 +268,33 @@ export default function SearchScreen() {
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           <>
-            <View className="pb-5 pt-4">
-              <Text className="text-[26px] font-bold tracking-tight text-[#202A27]">
-                Search
-              </Text>
-              <Text className="mt-1 text-sm text-[#7E8985]">
-                Find something worth discovering.
-              </Text>
-            </View>
-
-            <View className="flex-row items-center rounded-full bg-white px-4">
-              <Ionicons name="search-outline" size={21} color="#68736F" />
+            <View className="flex-row items-center rounded-full border border-border bg-surface px-4">
+              <Ionicons
+                name="search-outline"
+                size={21}
+                color={isDark ? "#A5AEA9" : "#68736F"}
+              />
               <TextInput
                 value={query}
                 onChangeText={setQuery}
                 placeholder="Search listings"
-                placeholderTextColor="#98A29E"
+                placeholderTextColor={isDark ? "#858F8A" : "#98A29E"}
                 returnKeyType="search"
-                className="ml-3 h-14 flex-1 text-[15px] text-[#263330]"
+                className="ml-3 h-14 flex-1 text-[15px] text-foreground"
                 accessibilityLabel="Search listings"
               />
               {query.length > 0 && (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Clear search"
-                  className="h-8 w-8 items-center justify-center rounded-full bg-[#F0F2F1]"
+                  className="h-8 w-8 items-center justify-center rounded-full bg-primary-soft"
                   onPress={() => setQuery("")}
                 >
-                  <Ionicons name="close" size={17} color="#68736F" />
+                  <Ionicons
+                    name="close"
+                    size={17}
+                    color={isDark ? "#A5AEA9" : "#68736F"}
+                  />
                 </Pressable>
               )}
               <Pressable
@@ -289,7 +303,11 @@ export default function SearchScreen() {
                 className="relative ml-1 h-10 w-10 items-center justify-center"
                 onPress={() => setShowFilters(true)}
               >
-                <Ionicons name="options-outline" size={20} color="#52605B" />
+                <Ionicons
+                  name="options-outline"
+                  size={20}
+                  color={isDark ? "#CBD2CE" : "#52605B"}
+                />
                 {activeSearchCount > 0 && (
                   <View className="absolute right-0 top-0 h-4 w-4 items-center justify-center rounded-full bg-[#D95757]">
                     <Text className="text-[9px] font-bold text-white">
@@ -314,13 +332,15 @@ export default function SearchScreen() {
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
                     className={`rounded-full px-4 py-2.5 ${
-                      selected ? "bg-[#183C35]" : "bg-white"
+                      selected
+                        ? "bg-[#183C35] dark:bg-[#376E5F]"
+                        : "border border-border bg-surface"
                     }`}
                     onPress={() => setCategory(item)}
                   >
                     <Text
                       className={`text-[13px] font-semibold ${
-                        selected ? "text-white" : "text-[#596560]"
+                        selected ? "text-white" : "text-foreground"
                       }`}
                     >
                       {item}
@@ -332,10 +352,10 @@ export default function SearchScreen() {
 
             {!isLoading && !error && (
               <View className="mb-3 mt-7 flex-row items-center justify-between">
-                <Text className="text-lg font-bold text-[#263330]">
+                <Text className="text-lg font-bold text-foreground">
                   {query.trim() ? "Search results" : "Browse listings"}
                 </Text>
-                <Text className="text-sm font-medium text-[#7E8985]">
+                <Text className="text-sm font-medium text-muted">
                   {results.length} {results.length === 1 ? "item" : "items"}
                 </Text>
               </View>
@@ -345,31 +365,35 @@ export default function SearchScreen() {
         ListEmptyComponent={
           isLoading ? (
             <View className="items-center py-20">
-              <ActivityIndicator color="#1E584C" />
-              <Text className="mt-3 text-sm text-[#7E8985]">
+              <ActivityIndicator color={isDark ? "#8BC5B3" : "#1E584C"} />
+              <Text className="mt-3 text-sm text-muted">
                 Loading listings…
               </Text>
             </View>
           ) : error ? (
-            <View className="items-center rounded-2xl bg-white px-6 py-12">
+            <View className="items-center rounded-2xl border border-border bg-surface px-6 py-12">
               <Ionicons
                 name="cloud-offline-outline"
                 size={30}
-                color="#84908B"
+                color={isDark ? "#9AA49F" : "#84908B"}
               />
-              <Text className="mt-3 text-center text-sm leading-5 text-[#68736F]">
+              <Text className="mt-3 text-center text-sm leading-5 text-muted">
                 {error}
               </Text>
             </View>
           ) : (
-            <View className="items-center rounded-2xl bg-white px-6 py-12">
-              <View className="h-12 w-12 items-center justify-center rounded-full bg-[#EDF2F0]">
-                <Ionicons name="search-outline" size={23} color="#52736A" />
+            <View className="items-center rounded-2xl border border-border bg-surface px-6 py-12">
+              <View className="h-12 w-12 items-center justify-center rounded-full bg-primary-soft">
+                <Ionicons
+                  name="search-outline"
+                  size={23}
+                  color={isDark ? "#8BC5B3" : "#52736A"}
+                />
               </View>
-              <Text className="mt-4 text-base font-bold text-[#263330]">
+              <Text className="mt-4 text-base font-bold text-foreground">
                 No listings found
               </Text>
-              <Text className="mt-1 text-center text-sm leading-5 text-[#7E8985]">
+              <Text className="mt-1 text-center text-sm leading-5 text-muted">
                 Try a different keyword or browse another category.
               </Text>
             </View>
